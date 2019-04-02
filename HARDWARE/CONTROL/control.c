@@ -97,16 +97,16 @@ void Control(void)
 			}
 			else
 			{
-				YawLockState = 1;
+				YawLockState = 0;
 				YawLock = MPU6050_Get.Yaw;
 			}
 		}
-		PID_yaw(&yaw_angle_PID,-YawLock, MPU6050_Get.Yaw);
+		PID_yaw(&yaw_angle_PID, YawLock, MPU6050_Get.Yaw);
 		
 //		printf("%f %f %f\r\n",pitch_angle_PID.output,roll_angle_PID.output,roll_angle_PID.output);
 		
 		//内环(速度环)X,Y,Z轴PID,目标量为上一级外环PID输出量，输入为当前三轴角速度
-		PID_yaw(&yaw_rate_PID, yaw_angle_PID.output+Target.yaw,-gyroz);
+		PID_yaw(&yaw_rate_PID, yaw_angle_PID.output+Target.yaw, -gyroz);
 		Position_PID(&pitch_rate_PID, pitch_angle_PID.output, -gyroy);
 		Position_PID(&roll_rate_PID, roll_angle_PID.output, gyrox);
 		
