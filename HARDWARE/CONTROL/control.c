@@ -1,18 +1,18 @@
 #include "control.h"
 
-//----PID½á¹¹ÊµÌå»¯----
-PID_Typedef pitch_angle_PID;	//pitch½Ç¶È»·PID
-PID_Typedef pitch_rate_PID;		//pitch½ÇËÙÂÊ»·PID
+//----PIDç»“æ„å®ä½“åŒ–----
+PID_Typedef pitch_angle_PID;	//pitchè§’åº¦ç¯PID
+PID_Typedef pitch_rate_PID;		//pitchè§’é€Ÿç‡ç¯PID
 
-PID_Typedef roll_angle_PID;   //roll½Ç¶È»·PID
-PID_Typedef roll_rate_PID;    //roll½ÇËÙÂÊ»·PID
+PID_Typedef roll_angle_PID;   //rollè§’åº¦ç¯PID
+PID_Typedef roll_rate_PID;    //rollè§’é€Ÿç‡ç¯PID
 
-PID_Typedef yaw_angle_PID;    //yaw½Ç¶È»·PID 
-PID_Typedef yaw_rate_PID;     //yaw½ÇËÙÂÊ»·PID
+PID_Typedef yaw_angle_PID;    //yawè§’åº¦ç¯PID 
+PID_Typedef yaw_rate_PID;     //yawè§’é€Ÿç‡ç¯PID
 
 int16_t Motor[4];
-float Thro=0,Roll=0,Pitch=0,Yaw=0;  //´æ´¢´®¼¶PID×îºóµ÷ÕûµÄÖµ
-#define intergral_max 30   //´Ë´¦ÔİÊ±ÎªÈÎÒâ¶¨ÒåµÄÖµ£¬ÓÃÓÚ»ı·Ö¿¹±¥ºÍ
+float Thro=0,Roll=0,Pitch=0,Yaw=0;  //å­˜å‚¨ä¸²çº§PIDæœ€åè°ƒæ•´çš„å€¼
+#define intergral_max 30   //æ­¤å¤„æš‚æ—¶ä¸ºä»»æ„å®šä¹‰çš„å€¼ï¼Œç”¨äºç§¯åˆ†æŠ—é¥±å’Œ
 float YawLock = 0;
 vu8 YawLockState = 0;
 
@@ -38,15 +38,15 @@ void PID_Init()
 }
 
 /*****
-Î»ÖÃÊ½PID
-µÚÒ»¸ö²ÎÊıÎª´®¼¶PIDµÄ½á¹¹Ìå´æ´¢±ÈÀıÏµÊı¡¢»ı·ÖÏµÊı¡¢Î¢·ÖÏµÊıµÄÖ¸
-µÚ¶ş¸ö²ÎÊıÎªPIDÄ¿±êÖµ£¬µÚÈı¸ö²ÎÊıÎªPIDÊäÈëÖµ
+ä½ç½®å¼PID
+ç¬¬ä¸€ä¸ªå‚æ•°ä¸ºä¸²çº§PIDçš„ç»“æ„ä½“å­˜å‚¨æ¯”ä¾‹ç³»æ•°ã€ç§¯åˆ†ç³»æ•°ã€å¾®åˆ†ç³»æ•°çš„æŒ‡
+ç¬¬äºŒä¸ªå‚æ•°ä¸ºPIDç›®æ ‡å€¼ï¼Œç¬¬ä¸‰ä¸ªå‚æ•°ä¸ºPIDè¾“å…¥å€¼
 *****/
 void Position_PID(PID_Typedef * PID,float target,float measure)
 {
 	PID->err =target - measure;
 	PID->intergral += PID->err;
-	//»ı·ÖÏŞ·ù
+	//ç§¯åˆ†é™å¹…
 	if(PID->intergral>intergral_max){PID->intergral=intergral_max;}
 	if(PID->intergral<-intergral_max){PID->intergral=-intergral_max;}
 	PID->deriv = PID->err -PID->err_last;
@@ -58,7 +58,7 @@ void PID_yaw(PID_Typedef * PID,float target,float measure)
 {
 	PID->err = target - measure;
 	PID->intergral += PID->err;
-	//»ı·ÖÏŞ·ù
+	//ç§¯åˆ†é™å¹…
 	if(PID->intergral>intergral_max){PID->intergral=intergral_max;}
 	if(PID->intergral<-intergral_max){PID->intergral=-intergral_max;}
 	PID->output = PID->P*PID->err+PID->I*PID->intergral+PID->D*(PID->err-PID->err_last);
@@ -68,26 +68,26 @@ void PID_yaw(PID_Typedef * PID,float target,float measure)
 void Control(void)
 {
 	
-	//¶ÁÈ¡Ò£¿ØÆ÷Öµ
+	//è¯»å–é¥æ§å™¨å€¼
 	sbus_analysis();
 	romote_process();
 	if(mode == 1)
 	{
 		
-		//¶ÁÈ¡µ±Ç°MPU6050ĞÅÏ¢
+		//è¯»å–å½“å‰MPU6050ä¿¡æ¯
 		mpu6050_get_data();
 		
-		//´òÓ¡Ò£¿ØÆ÷Öµ
+		//æ‰“å°é¥æ§å™¨å€¼
 		printf("%f %f %f %f\r\n",Target.roll,Target.pitch,Target.thro,Target.yaw);
 //		printf("%d %d %d %d\r\n",Target.roll,Target.pitch,Target.thro,Target.yaw);
-		//´òÓ¡MPU6050Öµ
+		//æ‰“å°MPU6050å€¼
 //		printf("%f %f %f  ",MPU6050_Get.Pitch,MPU6050_Get.Roll,MPU6050_Get.Yaw);
 //		printf("%d,%d,%d,%d,%d,%d\r\n",aacx,aacy,aacz,gyrox,gyroy,gyroz);
 		
-		//Íâ»·¿ØÖÆ£¬ÊäÈëÎªµ±Ç°½Ç¶È£¬Êä³öÎª½ÇËÙ¶È£¬×÷ÎªÄÚ»·µÄÊäÈë
+		//å¤–ç¯æ§åˆ¶ï¼Œè¾“å…¥ä¸ºå½“å‰è§’åº¦ï¼Œè¾“å‡ºä¸ºè§’é€Ÿåº¦ï¼Œä½œä¸ºå†…ç¯çš„è¾“å…¥
 		Position_PID(&pitch_angle_PID,-Target.pitch, MPU6050_Get.Pitch);
 		Position_PID(&roll_angle_PID,-Target.roll, MPU6050_Get.Roll);
-		//Íâ»·(½Ç¶È»·)ZÖáPID£¬Ä¿±êÁ¿ÎªYawLock´æ´¢µÄµ±Ç°Æ«º½½Ç¶È£¬ÊäÈëÎªµ±Ç°Êµ¼ÊÆ«º½½Ç¶È
+		//å¤–ç¯(è§’åº¦ç¯)Zè½´PIDï¼Œç›®æ ‡é‡ä¸ºYawLockå­˜å‚¨çš„å½“å‰åèˆªè§’åº¦ï¼Œè¾“å…¥ä¸ºå½“å‰å®é™…åèˆªè§’åº¦
 		if(Target.yaw == 0)
 		{
 			if(YawLockState == 0)
@@ -105,12 +105,12 @@ void Control(void)
 		
 //		printf("%f %f %f\r\n",pitch_angle_PID.output,roll_angle_PID.output,roll_angle_PID.output);
 		
-		//ÄÚ»·(ËÙ¶È»·)X,Y,ZÖáPID,Ä¿±êÁ¿ÎªÉÏÒ»¼¶Íâ»·PIDÊä³öÁ¿£¬ÊäÈëÎªµ±Ç°ÈıÖá½ÇËÙ¶È
-		PID_yaw(&yaw_rate_PID,roll_angle_PID.output+Target.yaw,-gyroz);
+		//å†…ç¯(é€Ÿåº¦ç¯)X,Y,Zè½´PID,ç›®æ ‡é‡ä¸ºä¸Šä¸€çº§å¤–ç¯PIDè¾“å‡ºé‡ï¼Œè¾“å…¥ä¸ºå½“å‰ä¸‰è½´è§’é€Ÿåº¦
+		PID_yaw(&yaw_rate_PID, yaw_angle_PID.output+Target.yaw,-gyroz);
 		Position_PID(&pitch_rate_PID, pitch_angle_PID.output, -gyroy);
 		Position_PID(&roll_rate_PID, roll_angle_PID.output, gyrox);
 		
-		//ÄÚ»·PIDµÄÊä³öÖµ¸³¸ø3¸ö±äÁ¿
+		//å†…ç¯PIDçš„è¾“å‡ºå€¼èµ‹ç»™3ä¸ªå˜é‡
 		Pitch = pitch_rate_PID.output;
 		Roll = roll_rate_PID.output;
 		Yaw = yaw_rate_PID.output;
