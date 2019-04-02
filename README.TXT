@@ -8,6 +8,7 @@ M2 正     M4 反
 
 主控板：STM32F103C8T6
 MPU6050
+USART3接收并解析SBUS信号
 			
 			
 			
